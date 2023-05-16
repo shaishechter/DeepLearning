@@ -25,7 +25,7 @@ def leaky_relu(z: Union[np.ndarray, float], neg_slope=0.01):
 
 # cost functions
 @nb.njit(parallel=True)
-def CR_cost(y_hat: np.ndarray, y: np.ndarray):
+def CE_cost(y_hat: np.ndarray, y: np.ndarray):
     # cost_comps = - np.where(y == 1,
     #                         np.log(y_hat),
     #                         np.log(1-y_hat))
@@ -37,5 +37,16 @@ def CR_cost(y_hat: np.ndarray, y: np.ndarray):
 def dw_sigmoid(X: np.ndarray, y_hat: np.ndarray, y: np.ndarray):
     return np.sum(
         (y_hat - y).reshape(-1, 1) * X,
+        axis=0,
+    ) / y.shape[0]
+
+
+
+@nb.njit(parallel=True)
+def dw_relu(X: np.ndarray, y_hat: np.ndarray, y: np.ndarray):
+    return np.sum(
+        (
+                (y / y_hat) - ((1-y) / (1-y_hat)) * (y_hat > 0)
+         ).reshape(-1, 1) * X,
         axis=0,
     ) / y.shape[0]
