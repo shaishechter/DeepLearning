@@ -14,16 +14,26 @@ from models.classifiers.utils import sigmoid, CE_cost as cost, dw_sigmoid as dw
 class LogisticClassifier:
     def __init__(self,
                  learning_rate: float = 0.1,
-                 max_iterations: int = 10_000):
+                 max_iterations: int = 10_000,
+                 stopping_criterion: float = 1e-7):
+        """
+        Classifier based on logistic regression; fitting is based on GD.
+        :param learning_rate: constant by which the gradient is multiplied when
+            descending.
+        :param max_iterations: maximum number of iterations of GD until the
+            fitting process halts.
+        :param stopping_criterion: once the change in cost between consecutive
+            descent steps falls below this value, the GD algorithm halts.
+        """
         self.weights: Optional[np.ndarray] = None
         self.learning_rate: float = learning_rate
         self.activation_func: Callable = sigmoid
         self.max_iterations = max_iterations
+        self.stopping_criterion = stopping_criterion
 
-    # in order to use numba, must change this and child functions to static
     @staticmethod
     @nb.njit
-    def _fit(X_bar, y, weights, learning_rate, max_iterations):
+    def _fit(X_bar, y, weights, learning_rate, max_iterations, stopping_criterion):
         c = np.inf
         for _ in range(max_iterations):
             y_hat = sigmoid(
@@ -34,7 +44,7 @@ class LogisticClassifier:
                     learning_rate * dw(X_bar, y_hat, y)
             )
             c_, c = c, cost(y_hat, y)
-            if np.abs(c - c_) < 1e-5:
+            if np.abs(c - c_) < stopping_criterion:
                 converged = True
                 break
         else:
@@ -56,7 +66,8 @@ class LogisticClassifier:
             y,
             self.weights,
             self.learning_rate,
-            self.max_iterations
+            self.max_iterations,
+            self.stopping_criterion,
         )
         if not converged:
             warnings.warn(
