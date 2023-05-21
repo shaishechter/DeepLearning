@@ -13,6 +13,14 @@ from models.classifiers.utils import sigmoid, CE_cost as cost, dw_sigmoid as dw
 
 
 class LogisticClassifier(BaseGDEstimator):
+    def __init__(self,
+                 learning_rate: float = 0.1,
+                 max_iterations: int = 10_000,
+                 stopping_criterion: float = 1e-7):
+        super().__init__(learning_rate, max_iterations, stopping_criterion)
+        self.weights: Optional[np.ndarray] = None
+        self.activation_func: Callable = sigmoid
+
     @staticmethod
     @nb.njit
     def _fit(X_bar, y, weights, learning_rate, max_iterations, stopping_criterion):
