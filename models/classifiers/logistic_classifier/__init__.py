@@ -8,29 +8,11 @@ import pandas as pd
 from sklearn.metrics import confusion_matrix
 from sklearn.exceptions import NotFittedError
 
+from models.classifiers.base import BaseGDEstimator
 from models.classifiers.utils import sigmoid, CE_cost as cost, dw_sigmoid as dw
 
 
-class LogisticClassifier:
-    def __init__(self,
-                 learning_rate: float = 0.1,
-                 max_iterations: int = 10_000,
-                 stopping_criterion: float = 1e-7):
-        """
-        Classifier based on logistic regression; fitting is based on GD.
-        :param learning_rate: constant by which the gradient is multiplied when
-            descending.
-        :param max_iterations: maximum number of iterations of GD until the
-            fitting process halts.
-        :param stopping_criterion: once the change in cost between consecutive
-            descent steps falls below this value, the GD algorithm halts.
-        """
-        self.weights: Optional[np.ndarray] = None
-        self.learning_rate: float = learning_rate
-        self.activation_func: Callable = sigmoid
-        self.max_iterations = max_iterations
-        self.stopping_criterion = stopping_criterion
-
+class LogisticClassifier(BaseGDEstimator):
     @staticmethod
     @nb.njit
     def _fit(X_bar, y, weights, learning_rate, max_iterations, stopping_criterion):
@@ -74,6 +56,7 @@ class LogisticClassifier:
                 f"Fitting finished after {self.max_iterations} "
                 f"iterations, convergence unlikely"
             )
+        return self
 
     @staticmethod
     @nb.njit
@@ -81,7 +64,7 @@ class LogisticClassifier:
                  weights: np.ndarray) -> np.ndarray:
         return (weights.reshape(1, -1) * X_bar).sum(axis=1)
 
-    def predict(self, X: pd.DataFrame):
+    def predict(self, X: pd.DataFrame) -> np.ndarray:
         if self.weights is None:
             raise NotFittedError
         if self.weights.shape[0] != X.shape[1] + 1:
