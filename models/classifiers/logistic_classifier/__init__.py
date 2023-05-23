@@ -78,7 +78,7 @@ class LogisticClassifier(BaseGDEstimator):
         if self.weights.shape[0] != X.shape[1] + 1:
             raise ValueError('dimension mismatch, the number of columns for X '
                              f'must be {self.weights.shape[0]}')
-        X_bar = np.hstack((np.zeros((X.shape[0], 1)), np.asarray(X)))
+        X_bar = np.hstack((np.ones((X.shape[0], 1)), np.asarray(X)))
         # X_bar is of the form [1, X], and the first value of weights is assumed
         # to be the bias
         return self.activation_func(
